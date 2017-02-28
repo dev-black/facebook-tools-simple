@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body style="padding-top:60px;">
+	<div class="container">
+		<div class="panel panel-info">
+			<div class="panel-heading">Auto Share Posts</div>
+			<div class="panel-body">
+				* Nhập List Access Token:
+				<textarea class="form-control" id="access_token" rows="8"></textarea><br>
+				* Nhập ID bài viết:
+				<input type="text" class="form-control" id="id"><br>
+				* Nhập nội dung khi share - hỗ trợ spin:
+				<textarea class="form-control" id="message" rows="5"></textarea>
+				<br>
+				* Chọn loại share:
+				<select class="form-control" id="option">
+					<option value="wall">Share về tường</option>
+					<option value="friends">Share về tường bạn bè</option>
+				</select>
+				<hr>
+				Trạng thái: <b id="status">Đang chờ !</b>
+			</div>
+			<div class="panel-footer">
+				<div class="pull-left">
+					Done: <b style="font-size:30px;color:green;" id="done">0</b>
+					-
+					Fail: <b style="font-size:30px;color:red;" id="fail">0</b>
+				</div>
+				<div class="text-right">
+					<button class="btn btn-primary" id="btn" data-loading-text="Đang gửi ...">Send</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script>
+		$(document).ready(function() {
+			var access_token, id, message, btn, option;
+			var delay_from = 10, delay_to = 60;
+			$("#btn").click(function() {
+				btn = $(this), access_token = $.trim($("#access_token").val()).split("\n"), id = $("#id").val(), message = $("#message").val(), option = $("#option").val();
+				btn.button('loading');
+				run_this(0);
+			});
+			function run_this(index) {
+				$.get('https://graph.facebook.com/fql', {
+					access_token: access_token[index],
+					q: 'select uid,name from user where uid in(select uid2 from friend where uid1 = me()) and can_post = 1 order by profile_update_time desc limit 5'
+				}).done(function(e) {
+					if (option == 'wall') {
+						$.post('https://graph.facebook.com/' + id + '/sharedposts', {
+							message: spinText(message),
+							privacy: 'eyJ2YWx1ZSI6IkVWRVJZT05FIn0=', /* EVERYONE */
+							access_token: access_token[index]
+						}).done(function() {
+							$("#done").text(parseInt($("#done").text()) + 1);
+							$("#status").html(`<font color="green">Access Token số ${index + 1} share về tường thành công ! <img src="https://i.imgsafe.org/203831a28f.gif" /></font>`);
+						}).error(function() {
+							$("#fail").text(parseInt($("#fail").text()) + 1);
+							$("#status").html(`<font color="red">Access Token số ${index + 1} share về tường thất bại ! <img src="https://i.imgsafe.org/203831a28f.gif" /></font>`);
+						}).always(function() {
+							if (index + 1 < access_token.length) {
+								run_this(index + 1);
+							} else {
+								btn.button('reset');
+								$("#status").html('Đã gửi xong !');
+							}
+						});
+					} else {
+						start_share(index, 0, e.data);
+					}
+				}).error(function() {
+					if (index + 1 < access_token.length) {
+						run_this(index + 1);
+					} else {
+						btn.button('reset');
+						$("#status").html('Đã gửi xong !');
+					}
+				});
+			}
+			function start_share(index, i, data) {
+				if (i < data.length) {
+					$.post('https://graph.facebook.com/' + id + '/sharedposts', {
+						to: data[i].uid,
+						message: spinText(message),
+						access_token: access_token[index]
+					}).done(function() {
+						$("#done").text(parseInt($("#done").text()) + 1);
+						$("#status").html(`<font color="green">Access Token số ${index + 1} share về tường <b>${data[i].uid}</b> thành công ! <img src="https://i.imgsafe.org/203831a28f.gif" /></font>`);
+					}).error(function() {
+						$("#fail").text(parseInt($("#fail").text()) + 1);
+						$("#status").html(`<font color="red">Access Token số ${index + 1} share về tường <b>${data[i].uid}</b> thất bại ! <img src="https://i.imgsafe.org/203831a28f.gif" /></font>`);
+					}).always(function() {
+						if (i + 1 < data.length) {
+							setTimeout(function() {
+								start_share(index, i + 1, data);
+							}, Math.floor(Math.random() * (delay_to - delay_from + 1) + delay_from) * 1000);
+						} else {
+							start_share(index, i + 1, data);
+						}
+					});
+				} else {
+					if (index + 1 < access_token.length) {
+						run_this(index + 1);
+					} else {
+						btn.button('reset');
+						$("#status").html('Đã gửi xong !');
+					}
+				}
+			}
+			function spinText(text) {
+				var matches = text.match(/{([^{}]*)}/g);
+				if (!matches)
+					return text;
+				for (i in matches) {
+					var spin      = matches[i];
+					var ori_spin  = spin;
+					spin          = spin.replace("{", "").replace("}", "");
+					var spin_strs = spin.split('|');
+					text          = text.replace(ori_spin, spin_strs[Math.floor(Math.random() * spin_strs.length)]);
+				}
+				return spinText(text);
+			}
+		});
+	</script>
+</body>
+</html>
