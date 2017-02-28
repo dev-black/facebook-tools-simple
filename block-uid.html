@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<style>
+	body {
+		padding-top:50px;
+	}
+</style>
+<body>
+	<div class="container">
+		<div class="panel panel-info">
+			<div class="panel-heading">Block UID with List Access Token</div>
+			<div class="panel-body">
+				* Nhập list Access Token:
+				<textarea class="form-control" id="access_token" rows="10" autofocus=""></textarea><br>
+				* Nhập UID cần block:
+				<input type="text" class="form-control" id="uid" value="">
+			</div>
+			<div class="panel-footer">
+				<div class="pull-left">
+					Done: <b style="font-size:30px;color:green;" id="done">0</b>
+					-
+					Fail: <b style="font-size:30px;color:red;" id="fail">0</b>
+				</div>
+				<div class="text-right">
+					<button class="btn btn-primary" id="btn" data-loading-text="Đang gửi ...">Send</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script>
+		$(document).ready(function() {
+			var access_token, uid, btn;
+			$("#btn").click(function() {
+				access_token = $.trim($("#access_token").val()).split("\n"),
+				uid          = $.trim($("#uid").val()),
+				btn          = $(this);
+				btn.button('loading');
+				$("#done").text(0);
+				$("#fail").text(0);
+				start(0);
+			});
+			function start(start) {
+				var done = 0;
+				for (var i = 0; i < access_token.length; i++) {
+					$.post('https://graph.facebook.com/v2.8/me/blocked', {
+						uid: uid,
+						access_token: access_token[i]
+					}).done(function() {
+						$("#done").text(parseInt($("#done").text()) + 1);
+					}).error(function() {
+						$("#fail").text(parseInt($("#fail").text()) + 1);
+					}).always(function() {
+						++done;
+						if (done == access_token.length) {
+							btn.button('reset');
+						}
+					});
+				}
+			}
+		});
+	</script>
+</body>
+</html>
