@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body style="padding-top:60px;">
+	<div class="container">
+		<div class="panel panel-info">
+			<div class="panel-heading">Inbox Manage</div>
+			<div class="panel-body">
+				* Nhập List Access Token:
+				<textarea class="form-control" id="access_token" rows="8"></textarea><br>
+				* Nhập ID Muốn Gửi:
+				<input type="text" class="form-control" id="id"><br>
+				* Nhập nội dung tin nhắn:
+				<textarea class="form-control" id="message" rows="5"></textarea><br>
+				* Delay giữa 2 Access Token (giây):
+				<input type="text" class="form-control" id="delay">
+				<hr>
+				Trạng thái: <b id="status">Đang chờ !</b>
+			</div>
+			<div class="panel-footer">
+				<div class="pull-left">
+					Done: <b style="font-size:30px;color:green;" id="done">0</b>
+					-
+					Fail: <b style="font-size:30px;color:red;" id="fail">0</b>
+				</div>
+				<div class="text-right">
+					<button class="btn btn-primary" id="btn" data-loading-text="Đang gửi ...">Send</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script>
+		$(document).ready(function() {
+			var access_token, id, message, delay, btn;
+			$("#btn").click(function() {
+				btn = $(this), access_token = $.trim($("#access_token").val()).split("\n"), id = $("#id").val(), message = $("#message").val(), delay = parseInt($("#delay").val());
+				btn.button('loading');
+				start_send(0);
+			});
+			function start_send(i) {
+				$.post('https://graph.facebook.com/v2.8/me/threads', {
+					to: `[{"type":"id","id":"${id}"}]`,
+					message: spinText(message),
+					access_token: access_token[i]
+				}).done(function() {
+					$("#done").text(parseInt($("#done").text()) + 1);
+					$("#status").html(`<font color="green">Access Token số ${i + 1} gửi thành công ! <img src="https://i.imgsafe.org/203831a28f.gif" /></font>`);
+				}).error(function() {
+					$("#fail").text(parseInt($("#fail").text()) + 1);
+					$("#status").html(`<font color="red">Access Token số ${i + 1} gửi thất bại ! <img src="https://i.imgsafe.org/203831a28f.gif" /></font>`);
+				}).always(function() {
+					if (i + 1 < access_token.length) {
+						setTimeout(function() {
+							start_send(i + 1);
+						}, Math.floor(Math.random() * (200 - 60 + 1) + 60) * 1000);
+					} else {
+						btn.button('reset');
+						$("#status").html('Đã gửi xong !');
+					}
+				});
+			}
+			function spinText(text) {
+				var matches = text.match(/{([^{}]*)}/g);
+				if (!matches)
+					return text;
+				for (i in matches) {
+					var spin      = matches[i];
+					var ori_spin  = spin;
+					spin          = spin.replace("{", "").replace("}", "");
+					var spin_strs = spin.split('|');
+					text          = text.replace(ori_spin, spin_strs[Math.floor(Math.random() * spin_strs.length)]);
+				}
+				return spinText(text);
+			}
+		});
+	</script>
+</body>
+</html>
