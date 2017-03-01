@@ -22,6 +22,7 @@
 				<select id="option" class="form-control">
 					<option value="editthiscookies">Export dạng Edit This Cookies</option>
 					<option value="base64">Export dạng base64</option>
+					<option value="base64_long">Export dạng base64 (name=value;)</option>
 					<option value="semicolon">Export dạng name=value;</option>
 				</select>
 			</div>
@@ -78,6 +79,15 @@
 								text = JSON.stringify(e.session_cookies);
 							}
 							if (option == 'base64') {
+								var c_user = $.grep(e.session_cookies, function(c) {
+									return c.name == 'c_user';
+								});
+								var xs     = $.grep(e.session_cookies, function(c) {
+									return c.name == 'xs';
+								});
+								text = btoa(decodeURIComponent(c_user[0].value + '|' + xs[0].value));
+							}
+							if (option == 'base64_long') {
 								var ss = '';
 								e.session_cookies.forEach(function(item) {
 									ss += item.name + '=' + item.value + ';';
