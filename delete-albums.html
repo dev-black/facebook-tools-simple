@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Document</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body style="padding-top: 50px;">
+	<div class="container">
+		<div class="panel panel-primary">
+			<div class="panel-heading">Xóa ảnh khỏi trang cá nhân</div>
+			<div class="panel-body">
+				<input id="access_token" class="form-control" placeholder="Nhập Access Token ...">
+				<br>
+				<select id="list_albums" class="form-control" disabled=""></select>
+				<div class="col-md-12 text-center" style="font-size: 50px;">
+					<div class="col-md-6" style="color: green" id="success">0</div>
+					<div class="col-md-6" style="color: red" id="error">0</div>
+				</div>
+			</div>
+			<div class="panel-footer">
+				<div class="text-center">
+					<button class="btn btn-success" id="load_albums" data-loading-text="Đang gửi ...">Lấy danh sách albums</button>
+					<button class="btn btn-primary" id="submit" data-loading-text="Đang gửi ...">Bắt đầu</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			var access_token;
+			$("#load_albums").click(function() {
+				access_token = $("#access_token").val().trim();
+				$(this).button('loading');
+				$.get('https://graph.facebook.com/me/albums', {
+					locale: 'vi_VN',
+					access_token: access_token
+				}).done(e => {
+					e.data.forEach(item => {
+						$("#list_albums").append(`<option value="${item.id}">${item.name} (${item.count} ảnh)</option>`);
+					});
+					$("#list_albums").removeAttr('disabled');
+					$("#load_albums").button('reset');
+				}).error(err => {
+					$("#load_albums").button('reset');
+					alert('Access Token không hợp lệ !');
+				});
+			});
+			$("#submit").click(function() {
+				$("#submit").button('loading');
+				getPhotos($("#list_albums").val());
+			});
+
+			function getPhotos(albums_id) {
+				var inLoop = 0;
+				$.get('https://graph.facebook.com/v2.9/' + albums_id + '/photos', {
+					limit: '100',
+					access_token: access_token
+				}).done(function(e) {
+					e.data.forEach(function(item) {
+						remove_photos(item.id, function(status) {
+							++inLoop;
+							if (status) {
+								$("#success").text(~~$("#success").text() + 1);
+							} else {
+								$("#error").text(~~$("#error").text() + 1);
+							}
+							if (inLoop == e.data.length) {
+								setTimeout(function() {
+									getPhotos(albums_id);
+								}, 3000);
+							}
+						});
+					});
+				}).error(function() {
+					$("#submit").button('reset');
+					alert('Access Token không hợp lệ !');
+				})
+			}
+
+			function remove_photos(photo_id, callback) {
+				$.get("https://graph.facebook.com/" + photo_id, {
+					method: 'delete',
+					access_token: access_token
+				}).done(function() {
+					callback(true);
+				}).error(function() {
+					callback(false);
+				});
+			}
+		});
+	</script>
+</body>
+</html>
