@@ -6,3 +6,4 @@
 - [Lấy Cookies của tài khoản bằng Access Token](get-cookies-from-access-token.html)
 - [Lấy Access Token full Quyền](get-session-for-app.html)
 - [Xóa tài khoản quảng cáo rác (Chưa có phương thức thanh toán)](remove-adaccounts-no-payment.html)
+- [Xóa album ảnh khỏi trang cá nhân](delete-albums.html)
