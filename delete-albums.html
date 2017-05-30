@@ -124,7 +124,7 @@
 					access_token: access_token
 				}).done(function(e) {
 					e.data.forEach(function(item, index) {
-						$("#table").append(`<tr><td class="text-center">${$("#table tr").length + 1}</td><td class="text-center"><input type="checkbox" value="${item.id}"></td><td class="text-center"><img src="${item.picture}"></td><td>${item.name ? item.name : ''}</td><td>Time: ${timeConverter(item.created_time)}<br>Like: ${item.likes.summary.total_count}<br>Comment: ${item.comments.summary.total_count}</td></tr>`);
+						$("#table").append(`<tr><td class="text-center">${$("#table tr").length + 1}</td><td class="text-center"><input type="checkbox" value="${item.id}"></td><td class="text-center"><img src="${item.picture}"></td><td>${item.name ? item.name : ''}</td><td>Time: ${timeConverter(item.created_time)}<br>Like: ${item.likes ? item.likes.summary.total_count : 0}<br>Comment: ${item.comments ? item.comments.summary.total_count : 0}</td></tr>`);
 					});
 					if (e.paging && e.paging.next) {
 						getPhotos(e.paging.next);
