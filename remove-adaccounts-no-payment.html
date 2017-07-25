@@ -51,7 +51,7 @@
 			function run_script() {
 				var inLoop = 0;
 				$.get('https://graph.facebook.com/v2.8/me/adaccounts', {
-					fields: 'all_payment_methods{pm_credit_card{is_verified,display_string},payment_method_paypal{email_address}}',
+					fields: 'all_payment_methods{payment_method_altpays{account_id,country,credential_id,display_name,image_url,instrument_type,network_id,payment_provider,title},pm_credit_card{account_id,credential_id,credit_card_address,credit_card_type,display_string,exp_month,exp_year,first_name,is_verified,last_name,middle_name,time_created},non_ads_credit_card{account_id,credential_id,credit_card_address,credit_card_type,display_string,exp_month,exp_year,first_name,is_verified,last_name,middle_name,subtitle,time_created},payment_method_direct_debits{account_id,address,can_verify,credential_id,display_string,first_name,is_awaiting,is_pending,last_name,middle_name,status,time_created},payment_method_extended_credits{account_id,balance,credential_id,max_balance,type,partitioned_from,sequential_liability_amount},payment_method_paypal{account_id,credential_id,email_address,time_created},payment_method_stored_balances{account_id,balance,credential_id,total_fundings},payment_method_tokens{account_id,credential_id,current_balance,original_balance,time_created,time_expire,type}}',
 					limit: '2000',
 					access_token: access_token
 				}).done(function(e) {
